@@ -1,0 +1,13 @@
+# Python virtual environment
+.venv/
+venv/
+
+# Python bytecode cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Other common Python ignores
+*.egg-info/
+*.log
+*.pot

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fetch API Example</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Load html2canvas first -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- Then load jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="script.js" defer></script>
+
+</head>
+<body class="bg-gray-100 text-gray-900">
+  <main class="max-w-[794px] mx-auto my-8" id="pdf-content">
+      <!-- Header -->
+      <div class="flex justify-between mb-10  p-6 rounded-lg shadow">
+      <div class="flex flex-col justify-center">
+        <p class="text-xl mb-2">
+            <span class="font-semibold">Name:</span>
+            <span id="fullname"></span>
+        </p>
+        <p class="text-xl mb-2">
+            <span class="font-semibold">ID:</span>
+             <span id="student_id"></span>
+        </p>
+        <p class="text-xl">
+            <span class="font-semibold">Year of Entry:</span>
+            <span id="year_of_entry"></span>
+        </p>
+      </div>
+      <div class="w-36 h-36 overflow-hidden rounded-xl shadow-lg border-2 border-gray-300">
+        <img src="profile.png" alt="Profile" class="w-full h-full object-cover"/>
+      </div>
+    </div>
+    <!--table -->
+    <!-- Grid Section for Semesters -->
+     <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="transcript-container"></div>
+     
+     
+     
+
+  </main>
+</body>
+</html>
