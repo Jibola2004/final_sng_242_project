@@ -1,26 +1,8 @@
 import csv
 from typing import Dict, List, Tuple, Optional
-import re
 from pprint import pprint
+from utils import is_valid_semester_format,translate_semester_type
 
-def is_valid_semester_format(semester: str) -> bool:
-    return bool(re.fullmatch(r'\d{4}[123]', semester))
-
-def translate_semester_type(semester: str) -> str:
-    if len(semester) != 5 or not semester.isdigit():
-        raise ValueError("Semester must be a 5-digit string like '20231'")
-    
-    year = int(semester[:4])
-    point = int(semester[-1])
-    
-    if point == 1:
-        return f'Fall {year}-{year + 1}'
-    elif point == 2:
-        return f'Spring {year}-{year + 1}'
-    elif point == 3:
-        return f'Summer {year}-{year + 1}'
-    else:
-        raise ValueError('Invalid semester code: should end in 1 (Fall), 2 (Spring), or 3 (Summer)')
 
 class Course:
     course_details: Dict[int, 'Course'] = {}
@@ -102,6 +84,12 @@ class Department:
     def __init__(self, dept_id: int, dept_name: str):
         self.dept_id = dept_id
         self.dept_name = dept_name
+    
+    @staticmethod
+    def show_all_department():
+        print('All Department details')
+        for dept_id,department in Department.department_details.items():
+            pprint(f'Department ID:{dept_id}--(Department Name:{department.dept_name})')   
 
     @classmethod
     def from_csv(cls, file_path: str) -> Dict[int, 'Department']:
@@ -150,9 +138,25 @@ class Student:
         self.total_credit_hour_taken: int = 0
         self.cgpa: float = 0.0
         self.total_credit_per_semester: Dict[str, int] = {}
-
+    
+    @property
     def fullname(self) -> str:
         return f'{self.lastname} {self.firstname}'
+    @staticmethod
+    def show_full_student_details():
+        print("\n--- All Student Details ---")
+        for student_id, student_obj in Student.student_details.items():
+        # Get department name (handle potential KeyError if department doesn't exist)
+            try:
+               dept_name = Department.department_details[student_obj.dept_id].dept_name
+            except (AttributeError, KeyError):
+               dept_name = "Unknown Department"
+        
+            pprint(f"Student ID: {student_id} -- "
+              f"({student_obj.lastname}, {student_obj.firstname} - "
+              f"{dept_name} - "
+              f"Entry Year: {student_obj.entry_year})")
+    
 
     def show_details(self):
         pprint(f'{self.lastname} {self.firstname}')
@@ -179,7 +183,9 @@ class Student:
             print(f"File not found: {file_path}")
         return cls.student_details
     
+    
     def load_course_curriculum(self) -> None:
+        
         self.course_curriculum = {
             numeric_course_code: curriculum 
             for numeric_course_code, curriculum in Curriculum.Curriculum_details.items()
@@ -318,7 +324,7 @@ class Student:
             self.get_total_credit_per_semester()
             
         transcript_data = {
-            'student_name': self.fullname(),
+            'student_name': self.fullname,
             'student_id': self.id,
             'department': Department.department_details[self.dept_id].dept_name,
             'entry_year': self.entry_year,
@@ -348,24 +354,129 @@ class Student:
             transcript_data['semesters'].append(semester_data)
 
         return transcript_data
+    def generate_transcript_html(self, transcript_data):
+        html_content = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>{transcript_data.get("student_name", "Guest")} Transcript</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-gray-100 text-gray-900">
+        <main class="max-w-[794px] mx-auto my-8" id="pdf-content">
+            <!-- Header -->
+            <div class="flex justify-between mb-10 p-6 rounded-lg shadow bg-white">
+                <div class="flex flex-col justify-center">
+                    <p class="text-xl mb-2">
+                        <span class="font-semibold">Name:</span>
+                        <span id="fullname">{transcript_data.get("student_name", "New Guest")}</span>
+                    </p>
+                    <p class="text-xl mb-2">
+                        <span class="font-semibold">ID:</span>
+                        <span id="student_id">{transcript_data.get("student_id", "25*****")}</span>
+                    </p>
+                    <p class="text-xl">
+                        <span class="font-semibold">Year of Entry:</span>
+                        <span id="year_of_entry">{transcript_data.get("entry_year", "2***")}</span>
+                    </p>
+                </div>
+                <div class="w-36 h-36 overflow-hidden rounded-xl shadow-lg border-2 border-gray-300">
+                    <img src="https://www.pngmart.com/files/23/Profile-PNG-Photo.png" 
+                         alt="Profile" class="w-full h-full object-cover"/>
+                </div>
+            </div>
 
-from data import data1
+            <!-- Semesters -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="transcript-container">
+    """
 
+        for semester in transcript_data.get("semesters", []):
+            html_content += f"""
+            <div class="overflow-x-auto mb-6">
+                <table class="w-full table-auto border border-gray-300 text-sm">
+                    <caption class="caption-top text-center font-semibold py-1 bg-black text-white">{semester.get("name")}</caption>
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="border px-2 py-1">Code</th>
+                            <th class="border px-2 py-1">Name</th>
+                            <th class="border px-2 py-1">Grade</th>
+                            <th class="border px-2 py-1">Cr</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        """
+
+            for course in semester.get("courses", []):
+                html_content += f"""
+                        <tr>
+                            <td class="border px-2 py-1">{course.get("code")}</td>
+                            <td class="border px-2 py-1">{course.get("name")}</td>
+                            <td class="border px-2 py-1">{course.get("grade")}</td>
+                            <td class="border px-2 py-1">{course.get("credit")}</td>
+                        </tr>
+            """
+
+            html_content += f"""
+                        <tr><td colspan="4" class="border px-2 py-1 text-center">--------------------</td></tr>
+                        <tr>
+                            <td colspan="2" class="border px-2 py-1 font-semibold">GPA</td>
+                            <td class="border px-2 py-1">{semester.get("gpa", "-")}</td>
+                            <td class="border px-2 py-1">{semester.get("total_credits", "-")}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" class="border px-2 py-1 font-semibold">CGPA</td>
+                            <td class="border px-2 py-1">{semester.get("cgpa", transcript_data.get("cgpa", "-"))}</td>
+                            <td class="border px-2 py-1">{semester.get("total_credits", "-")}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        """
+
+        # Close main content
+        html_content += """
+            </div>
+        </main>
+    </body>
+    </html>
+    """
+
+        # Save the transcript HTML to a file
+        file_name = f"{transcript_data.get('student_name', 'Guest').replace(' ', '_')}_transcript.html"
+        with open(file_name, "w", encoding="utf-8") as file:
+             file.write(html_content)
+
+        print(f"✅ {file_name} has been generated and saved.")
+
+
+
+
+
+
+
+
+
+
+'''
 def main():
     # Load all data
     Department.from_csv('departments.csv')
     Course.from_csv('courses.csv')
-    Curriculum.from_csv('cng_curriculum.csv')
+    Curriculum.from_csv('cyg_curriculum.csv')
     
     # Create and process student
     student = Student(2600724, 'Fathiu', 'Odetola', 355, 2012)
     student.load_course_curriculum()
-    student.add_all_courses(data=data1)
+    #student.add_all_courses(data=data_cyg_2)
     
     # Generate and display transcript data
     transcript = student.generate_transcript_data()
+    # Generate transcript data html
+    student.generate_transcript_html(transcript_data=transcript)
    
-    return transcript
+    
 
 if __name__ == "__main__":
     main()
+'''
