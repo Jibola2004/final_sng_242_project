@@ -71,5 +71,11 @@ This system allows for management and generation of student transcripts based on
 
 ---
 
-## 🧠 Example Menu Output
+## 🧠 Example Menu Output 
+## Screenshot Example in HTML
+![Screenshot_4-6-2025_12733_](https://github.com/user-attachments/assets/6cb20f90-9fc0-4ea4-ada9-8c29f4745d16)
+
+## Screenshot Example in PDF
+
+[Davis_Noah_transcript.pdf](https://github.com/user-attachments/files/20611047/Davis_Noah_transcript.pdf)
 
