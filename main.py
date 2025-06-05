@@ -2,7 +2,7 @@ import csv
 from typing import Dict, List, Tuple, Optional
 from pprint import pprint
 from utils import is_valid_semester_format,translate_semester_type
-
+import pdfkit
 
 class Course:
     course_details: Dict[int, 'Course'] = {}
@@ -448,7 +448,151 @@ class Student:
              file.write(html_content)
 
         print(f"✅ {file_name} has been generated and saved.")
+    def generate_transcript_pdf(self,transcript_data):
+        html_content = f"""
+       <!DOCTYPE html>
+       <html lang="en">
+        <head>
+       <meta charset="UTF-8">
+       <title>{transcript_data.get("student_name", "Guest")} Transcript</title>
+        <style>
+        body {{
+            background-color: #f3f4f6;
+            color: #111827;
+            font-family: sans-serif;
+            padding: 20px;
+        }}
+        .container {{
+            max-width: 794px;
+            margin: 0 auto;
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }}
+        .flex {{
+            display: flex;
+            justify-content: space-between;
+        }}
+        .profile {{
+            width: 144px;
+            height: 144px;
+            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border: 2px solid #D1D5DB;
+        }}
+        .profile img {{
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }}
+        .text-xl {{
+            font-size: 18px;
+            margin-bottom: 8px;
+        }}
+        .font-semibold {{
+            font-weight: 600;
+        }}
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }}
+        th, td {{
+            border: 1px solid #D1D5DB;
+            padding: 6px 8px;
+            text-align: left;
+        }}
+        thead {{
+            background-color: #E5E7EB;
+        }}
+        caption {{
+            font-weight: 600;
+            background-color: #000;
+            color: #fff;
+            padding: 4px;
+            caption-side: top;
+        }}
+       </style>
+       </head>
+        <body>
+        <main class="container">
+        <!-- Header -->
+        <div class="flex" style="margin-bottom: 32px;">
+            <div>
+                <p class="text-xl">
+                    <span class="font-semibold">Name:</span>
+                    {transcript_data.get("student_name", "New Guest")}
+                </p>
+                <p class="text-xl">
+                    <span class="font-semibold">ID:</span>
+                    {transcript_data.get("student_id", "25*****")}
+                </p>
+                <p class="text-xl">
+                    <span class="font-semibold">Year of Entry:</span>
+                    {transcript_data.get("entry_year", "2***")}
+                   </p>
+                   </div>
+                  <div class="profile">
+                <img src="https://www.pngmart.com/files/23/Profile-PNG-Photo.png" alt="Profile"/>
+                 </div>
+                </div>
 
+                  <!-- Semesters -->
+             """
+
+        for semester in transcript_data.get("semesters", []):
+            html_content += f"""
+             <table>
+              <caption>{semester.get("name")}</caption>
+              <thead>
+               <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Grade</th>
+                <th>Cr</th>
+               </tr>
+             </thead>
+             <tbody>
+               """
+            for course in semester.get("courses", []):
+                html_content += f"""
+                 <tr>
+                <td>{course.get("code")}</td>
+                <td>{course.get("name")}</td>
+                <td>{course.get("grade")}</td>
+                <td>{course.get("credit")}</td>
+                </tr>
+                   """
+
+            html_content += f"""
+                <tr><td colspan="4" style="text-align: center;">--------------------</td></tr>
+                <tr>
+                <td colspan="2" class="font-semibold">GPA</td>
+                <td>{semester.get("gpa", "-")}</td>
+                <td>{semester.get("total_credits", "-")}</td>
+                </tr>
+                 <tr>
+                <td colspan="2" class="font-semibold">CGPA</td>
+                <td>{semester.get("cgpa", transcript_data.get("cgpa", "-"))}</td>
+                <td>{semester.get("total_credits", "-")}</td>
+                </tr>
+              </tbody>
+             </table>
+               """
+
+        html_content += """
+         </main>
+         </body>
+         </html>
+          """
+
+
+        # Save the transcript pdf to a file
+        file_name = f"{transcript_data.get('student_name', 'Guest').replace(' ', '_')}_transcript.pdf"
+        pdfkit.from_string(html_content,file_name)
 
 
 
